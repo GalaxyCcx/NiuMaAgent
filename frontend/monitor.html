@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Monitor - Chat2Excel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            background: #0d1117;
+            color: #c9d1d9;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #161b22 0%, #21262d 100%);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #30363d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 1.25rem;
+            color: #58a6ff;
+        }
+        
+        .status-bar {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #484f58;
+        }
+        
+        .status-dot.connected {
+            background: #3fb950;
+            box-shadow: 0 0 8px rgba(63, 185, 80, 0.5);
+        }
+        
+        .session-input {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .session-input input {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            padding: 0.5rem 1rem;
+            color: #c9d1d9;
+            font-family: inherit;
+            width: 320px;
+        }
+        
+        .session-input button {
+            background: #238636;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        
+        .session-input button:hover {
+            background: #2ea043;
+        }
+        
+        .session-input button.disconnect {
+            background: #da3633;
+        }
+        
+        .main-container {
+            display: flex;
+            height: calc(100vh - 60px);
+            position: relative;
+        }
+        
+        /* 左侧 Agent 列表 - 固定定位 */
+        .agent-list {
+            background: #161b22;
+            border-right: 1px solid #30363d;
+            overflow-y: auto;
+            padding: 1rem;
+            position: fixed;
+            top: 60px;
+            left: 0;
+            width: 280px;
+            height: calc(100vh - 60px);
+            z-index: 10;
+            box-sizing: border-box;
+        }
+        
+        .agent-list h3 {
+            font-size: 0.75rem;
+            color: #8b949e;
+            text-transform: uppercase;
+            margin-bottom: 0.75rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .agent-item {
+            background: #21262d;
+            border-radius: 6px;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .agent-item:hover {
+            border-color: #30363d;
+        }
+        
+        .agent-item.selected {
+            border-color: #58a6ff;
+            background: #1f2937;
+        }
+        
+        .agent-item.running {
+            border-left: 3px solid #3fb950;
+        }
+        
+        .agent-item.complete {
+            border-left: 3px solid #8b949e;
+        }
+        
+        .agent-item.error {
+            border-left: 3px solid #f85149;
+        }
+        
+        .agent-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.25rem;
+        }
+        
+        .agent-type {
+            font-size: 0.7rem;
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        
+        .agent-type.center { background: #238636; color: white; }
+        .agent-type.research { background: #1f6feb; color: white; }
+        .agent-type.nl2sql { background: #8957e5; color: white; }
+        .agent-type.chart { background: #f97316; color: white; }
+        .agent-type.summary { background: #0ea5e9; color: white; }
+        .agent-type.router { background: #6e7681; color: white; }
+        
+        .agent-label {
+            font-size: 0.85rem;
+            color: #c9d1d9;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .agent-time {
+            font-size: 0.7rem;
+            color: #6e7681;
+        }
+        
+        /* 右侧日志面板 */
+        /* 右侧日志面板 */
+        .log-panel {
+            display: flex;
+            flex-direction: column;
+            background: #0d1117;
+            margin-left: 280px;  /* 为固定的左侧边栏留出空间 */
+            width: calc(100% - 280px);
+            height: calc(100vh - 60px);
+            overflow: hidden;
+        }
+        
+        .log-header {
+            background: #161b22;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #30363d;
+            font-size: 0.9rem;
+            color: #58a6ff;
+        }
+        
+        .log-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            font-size: 0.8rem;
+            line-height: 1.6;
+        }
+        
+        .log-entry {
+            margin-bottom: 0.75rem;
+            padding: 0.5rem 0.75rem;
+            background: #161b22;
+            border-radius: 4px;
+            border-left: 3px solid #30363d;
+        }
+        
+        .log-entry.start { border-left-color: #3fb950; }
+        .log-entry.request { border-left-color: #1f6feb; }
+        .log-entry.chunk { border-left-color: #7ee787; }
+        .log-entry.response { border-left-color: #58a6ff; }
+        .log-entry.tool_call { border-left-color: #d2a8ff; }
+        .log-entry.tool_result { border-left-color: #a5d6ff; }
+        .log-entry.complete { border-left-color: #238636; }
+        .log-entry.error { border-left-color: #f85149; }
+        
+        .log-meta {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.75rem;
+        }
+        
+        .log-time {
+            color: #6e7681;
+        }
+        
+        .log-type {
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .log-type.start { color: #3fb950; }
+        .log-type.request { color: #1f6feb; }
+        .log-type.chunk { color: #7ee787; }
+        .log-type.response { color: #58a6ff; }
+        .log-type.tool_call { color: #d2a8ff; }
+        .log-type.tool_result { color: #a5d6ff; }
+        .log-type.complete { color: #238636; }
+        .log-type.error { color: #f85149; }
+        
+        .log-data {
+            color: #8b949e;
+            word-break: break-word;
+        }
+        
+        .log-data pre {
+            background: #0d1117;
+            padding: 0.5rem;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .chunk-stream {
+            font-family: inherit;
+            line-height: 1.5;
+            color: #c9d1d9;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        
+        .chunk-thinking {
+            color: #8b949e;
+            font-style: italic;
+        }
+        
+        .chunk-tool-name {
+            color: #d2a8ff;
+            font-weight: 600;
+        }
+        
+        .chunk-tool-args {
+            color: #7ee787;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .expand-toggle {
+            color: #58a6ff;
+            cursor: pointer;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+            display: inline-block;
+        }
+        
+        .expand-toggle:hover {
+            text-decoration: underline;
+        }
+        
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #6e7681;
+        }
+        
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        /* 滚动条 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #161b22;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #484f58;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔍 Agent Monitor</h1>
+        <div class="status-bar">
+            <div class="session-input">
+                <input type="text" id="sessionInput" placeholder="输入 Session ID...">
+                <button id="connectBtn" onclick="connect()">连接</button>
+            </div>
+            <div class="status-indicator">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">未连接</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="main-container">
+        <div class="agent-list">
+            <h3>活跃 Agents</h3>
+            <div id="agentListContent">
+                <div class="empty-state" style="height: 200px;">
+                    <p>等待连接...</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="log-panel">
+            <div class="log-header" id="logHeader">
+                选择一个 Agent 查看日志
+            </div>
+            <div class="log-content" id="logContent">
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    <p>选择左侧 Agent 查看实时日志</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 全局状态
+        let eventSource = null;
+        let agents = {};  // agent_id -> {type, label, status, logs: []}
+        let selectedAgentId = null;
+        
+        // 性能优化：节流定时器
+        let renderAgentListTimer = null;
+        let renderLogsTimer = null;
+        let updateChunkTimer = null;
+        
+        // 节流函数
+        function throttle(fn, delay, timerId) {
+            return function(...args) {
+                if (window[timerId]) return;
+                window[timerId] = setTimeout(() => {
+                    fn.apply(this, args);
+                    window[timerId] = null;
+                }, delay);
+            };
+        }
+        
+        // 从 URL 获取 session_id
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionIdFromUrl = urlParams.get('session');
+        if (sessionIdFromUrl) {
+            document.getElementById('sessionInput').value = sessionIdFromUrl;
+            setTimeout(() => connect(), 500);
+        }
+        
+        function connect() {
+            const sessionId = document.getElementById('sessionInput').value.trim();
+            if (!sessionId) {
+                alert('请输入 Session ID');
+                return;
+            }
+            
+            disconnect();
+            
+            const apiBase = localStorage.getItem('api_base_url') || 'http://localhost:8000';
+            eventSource = new EventSource(`${apiBase}/api/chat/monitor/${sessionId}`);
+            
+            eventSource.onopen = () => {
+                document.getElementById('statusDot').classList.add('connected');
+                document.getElementById('statusText').textContent = '已连接';
+                document.getElementById('connectBtn').textContent = '断开';
+                document.getElementById('connectBtn').classList.add('disconnect');
+                document.getElementById('connectBtn').onclick = disconnect;
+            };
+            
+            eventSource.onmessage = (e) => {
+                if (e.data === '[DONE]') {
+                    disconnect();
+                    return;
+                }
+                
+                try {
+                    const event = JSON.parse(e.data);
+                    if (event.type === 'heartbeat') return;
+                    if (event.type === 'agent_event') {
+                        handleAgentEvent(event);
+                    }
+                } catch (err) {
+                    console.error('Parse error:', err);
+                }
+            };
+            
+            eventSource.onerror = () => {
+                document.getElementById('statusDot').classList.remove('connected');
+                document.getElementById('statusText').textContent = '连接断开';
+            };
+        }
+        
+        function disconnect() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+            document.getElementById('statusDot').classList.remove('connected');
+            document.getElementById('statusText').textContent = '未连接';
+            document.getElementById('connectBtn').textContent = '连接';
+            document.getElementById('connectBtn').classList.remove('disconnect');
+            document.getElementById('connectBtn').onclick = connect;
+        }
+        
+        function handleAgentEvent(event) {
+            const agentId = event.agent_id;
+            const eventType = event.event_type;
+            
+            // 初始化或更新 agent
+            if (!agents[agentId]) {
+                agents[agentId] = {
+                    type: event.agent_type,
+                    label: event.agent_label,
+                    status: 'running',
+                    logs: [],
+                    chunkBuffer: '',  // 用于累积 chunk
+                };
+            }
+            
+            const agent = agents[agentId];
+            
+            // 更新状态
+            if (eventType === 'complete') {
+                agent.status = 'complete';
+            } else if (eventType === 'error') {
+                agent.status = 'error';
+            } else if (eventType === 'start') {
+                agent.status = 'running';
+            }
+            
+            // 处理 chunk - 累积到 buffer，区分类型
+            if (eventType === 'chunk') {
+                const chunkContent = event.data?.content || '';
+                const chunkType = event.data?.type || 'content';
+                
+                // 根据类型添加不同的标记
+                if (chunkType === 'tool_name') {
+                    agent.chunkBuffer += `<span class="chunk-tool-name">${escapeHtml(chunkContent)}</span>`;
+                } else if (chunkType === 'tool_args') {
+                    agent.chunkBuffer += `<span class="chunk-tool-args">${escapeHtml(chunkContent)}</span>`;
+                } else if (chunkType === 'thinking') {
+                    agent.chunkBuffer += `<span class="chunk-thinking">${escapeHtml(chunkContent)}</span>`;
+                } else {
+                    agent.chunkBuffer += escapeHtml(chunkContent);
+                }
+                
+                // 更新 UI（如果选中）- 使用节流
+                if (selectedAgentId === agentId) {
+                    scheduleChunkUpdate(agentId);
+                }
+            } else {
+                // 如果有累积的 chunk，先保存
+                if (agent.chunkBuffer) {
+                    agent.logs.push({
+                        type: 'chunk_complete',
+                        time: event.timestamp,
+                        data: { content: agent.chunkBuffer },
+                    });
+                    agent.chunkBuffer = '';
+                }
+                
+                // 添加日志
+                agent.logs.push({
+                    type: eventType,
+                    time: event.timestamp,
+                    data: event.data,
+                });
+            }
+            
+            // 更新 UI（使用节流减少 DOM 操作）
+            scheduleRenderAgentList();
+            if (selectedAgentId === agentId) {
+                scheduleRenderLogs(agentId);
+            }
+        }
+        
+        // 节流版本的渲染函数
+        function scheduleRenderAgentList() {
+            if (renderAgentListTimer) return;
+            renderAgentListTimer = setTimeout(() => {
+                renderAgentList();
+                renderAgentListTimer = null;
+            }, 100);  // 100ms 节流
+        }
+        
+        function scheduleRenderLogs(agentId) {
+            if (renderLogsTimer) return;
+            renderLogsTimer = setTimeout(() => {
+                renderLogs(agentId);
+                renderLogsTimer = null;
+            }, 50);  // 50ms 节流
+        }
+        
+        function scheduleChunkUpdate(agentId) {
+            if (updateChunkTimer) return;
+            updateChunkTimer = setTimeout(() => {
+                updateChunkDisplay(agentId);
+                updateChunkTimer = null;
+            }, 30);  // 30ms 节流，chunk 更新需要更快
+        }
+        
+        function renderAgentList() {
+            const container = document.getElementById('agentListContent');
+            
+            if (Object.keys(agents).length === 0) {
+                container.innerHTML = '<div class="empty-state" style="height: 200px;"><p>暂无活跃 Agent</p></div>';
+                return;
+            }
+            
+            let html = '';
+            for (const [agentId, agent] of Object.entries(agents)) {
+                const isSelected = selectedAgentId === agentId;
+                html += `
+                    <div class="agent-item ${agent.status} ${isSelected ? 'selected' : ''}" 
+                         onclick="selectAgent('${agentId}')">
+                        <div class="agent-item-header">
+                            <span class="agent-type ${agent.type}">${agent.type}</span>
+                            <span class="agent-time">${formatTime(agent.logs[agent.logs.length - 1]?.time)}</span>
+                        </div>
+                        <div class="agent-label">${escapeHtml(agent.label)}</div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+        
+        function selectAgent(agentId) {
+            selectedAgentId = agentId;
+            renderAgentList();
+            renderLogs(agentId);
+        }
+        
+        function renderLogs(agentId) {
+            const agent = agents[agentId];
+            if (!agent) return;
+            
+            document.getElementById('logHeader').textContent = `${agent.type.toUpperCase()}: ${agent.label}`;
+            
+            const container = document.getElementById('logContent');
+            let html = '';
+            
+            for (const log of agent.logs) {
+                html += renderLogEntry(log);
+            }
+            
+            // 如果有正在累积的 chunk
+            if (agent.chunkBuffer) {
+                html += `
+                    <div class="log-entry chunk">
+                        <div class="log-meta">
+                            <span class="log-type chunk">STREAMING...</span>
+                        </div>
+                        <div class="log-data">
+                            <div class="chunk-stream" id="chunkStream_${agentId}">${agent.chunkBuffer}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function updateChunkDisplay(agentId) {
+            const agent = agents[agentId];
+            if (!agent) return;
+            
+            let streamEl = document.getElementById(`chunkStream_${agentId}`);
+            if (streamEl) {
+                // 使用 innerHTML 因为 chunkBuffer 包含 HTML 标签
+                streamEl.innerHTML = agent.chunkBuffer;
+            } else {
+                // 需要添加新的 chunk 显示区域
+                renderLogs(agentId);
+            }
+            
+            const container = document.getElementById('logContent');
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function renderLogEntry(log) {
+            const timeStr = formatTime(log.time);
+            let dataHtml = '';
+            
+            if (log.type === 'request') {
+                const msgCount = log.data?.messages_count || 0;
+                const messages = log.data?.messages || [];
+                dataHtml = `
+                    <div>消息数: ${msgCount}</div>
+                    <div class="expand-toggle" onclick="toggleExpand(this)">展开查看完整消息</div>
+                    <pre style="display: none;">${escapeHtml(JSON.stringify(messages, null, 2))}</pre>
+                `;
+            } else if (log.type === 'response') {
+                const content = log.data?.content || '';
+                const tools = log.data?.tool_calls || [];
+                dataHtml = `
+                    <div>响应长度: ${content.length} 字</div>
+                    ${tools.length > 0 ? `<div>工具调用: ${tools.map(t => t.name).join(', ')}</div>` : ''}
+                    <div class="expand-toggle" onclick="toggleExpand(this)">展开查看完整内容</div>
+                    <pre style="display: none;">${escapeHtml(content || JSON.stringify(tools, null, 2))}</pre>
+                `;
+            } else if (log.type === 'chunk_complete') {
+                dataHtml = `
+                    <div class="chunk-stream">${escapeHtml(log.data?.content || '')}</div>
+                `;
+            } else if (log.type === 'tool_call') {
+                dataHtml = `
+                    <div>工具: ${log.data?.name}</div>
+                    <div class="expand-toggle" onclick="toggleExpand(this)">展开查看参数</div>
+                    <pre style="display: none;">${escapeHtml(JSON.stringify(log.data?.arguments, null, 2))}</pre>
+                `;
+            } else if (log.type === 'tool_result') {
+                dataHtml = `
+                    <div>工具: ${log.data?.name}</div>
+                    <div class="expand-toggle" onclick="toggleExpand(this)">展开查看结果</div>
+                    <pre style="display: none;">${escapeHtml(log.data?.summary || '')}</pre>
+                `;
+            } else if (log.data) {
+                dataHtml = `<pre>${escapeHtml(JSON.stringify(log.data, null, 2))}</pre>`;
+            }
+            
+            return `
+                <div class="log-entry ${log.type}">
+                    <div class="log-meta">
+                        <span class="log-time">${timeStr}</span>
+                        <span class="log-type ${log.type}">${log.type.toUpperCase()}</span>
+                    </div>
+                    <div class="log-data">${dataHtml}</div>
+                </div>
+            `;
+        }
+        
+        function toggleExpand(el) {
+            const pre = el.nextElementSibling;
+            if (pre) {
+                if (pre.style.display === 'none') {
+                    pre.style.display = 'block';
+                    el.textContent = '收起';
+                } else {
+                    pre.style.display = 'none';
+                    el.textContent = '展开查看';
+                }
+            }
+        }
+        
+        function formatTime(isoTime) {
+            if (!isoTime) return '--:--:--';
+            try {
+                const d = new Date(isoTime);
+                return d.toTimeString().split(' ')[0];
+            } catch {
+                return '--:--:--';
+            }
+        }
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
+

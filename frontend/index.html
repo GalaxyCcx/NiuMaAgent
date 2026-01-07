@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat2Excel - 数据分析 Agent</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app">
+        <!-- 头部 -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">📊</span>
+                <h1>Chat2Excel</h1>
+            </div>
+            <nav class="nav">
+                <button class="nav-btn active" data-tab="data">📁 数据</button>
+                <button class="nav-btn" data-tab="chat">💬 对话</button>
+                <button class="nav-btn" data-tab="config">⚙️ 配置</button>
+            </nav>
+            <div class="status" id="status">
+                <span class="status-dot"></span>
+                <span class="status-text">检查中...</span>
+            </div>
+        </header>
+
+        <!-- 主内容 -->
+        <main class="main">
+            <!-- 数据页面 -->
+            <div class="tab-content active" id="tab-data">
+                <div class="data-container">
+                    <!-- 上传区域 -->
+                    <div class="upload-section">
+                        <div class="upload-area" id="uploadArea">
+                            <div class="upload-icon">📤</div>
+                            <h3>拖拽 CSV 文件到这里</h3>
+                            <p>或者点击选择文件（支持多文件上传）</p>
+                            <input type="file" id="fileInput" accept=".csv" multiple hidden>
+                            <button class="btn btn-primary upload-btn" id="selectFilesBtn">选择文件</button>
+                        </div>
+                        <div class="upload-options">
+                            <label>
+                                <input type="checkbox" id="generateDescriptions" checked>
+                                使用 LLM 自动生成字段描述
+                            </label>
+                            <p class="help-text">开启后会调用 LLM 为每个字段生成业务描述，耗时较长但分析更准确</p>
+                        </div>
+                    </div>
+
+                    <!-- 处理状态 -->
+                    <div class="process-status" id="processStatus" style="display: none;">
+                        <div class="process-status-header">
+                            <h3>📊 处理状态</h3>
+                            <div class="header-actions">
+                                <button class="btn btn-secondary btn-sm" id="toggleConsole">
+                                    📋 控制台
+                                </button>
+                                <button class="btn btn-danger btn-sm" id="clearAllBtn">
+                                    🗑️ 清空全部
+                                </button>
+                            </div>
+                        </div>
+                        <div class="status-list" id="statusList"></div>
+                        
+                        <!-- 控制台日志面板 -->
+                        <div class="console-panel" id="consolePanel" style="display: none;">
+                            <div class="console-header">
+                                <span>📋 处理日志</span>
+                                <button class="console-close" id="closeConsole">×</button>
+                            </div>
+                            <div class="console-body" id="consoleBody">
+                                <div class="console-placeholder">等待处理...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 知识库预览 -->
+                    <div class="knowledge-section" id="knowledgeSection" style="display: none;">
+                        <h3>📚 数据知识库</h3>
+                        <div class="tables-grid" id="tablesGrid"></div>
+                    </div>
+
+                    <!-- 表详情模态框 -->
+                    <div class="modal" id="tableModal">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3 id="modalTitle">表详情</h3>
+                                <button class="modal-close" id="closeModal">×</button>
+                            </div>
+                            <div class="modal-body" id="modalBody"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 对话页面 -->
+            <div class="tab-content" id="tab-chat">
+                <div class="chat-layout">
+                    <!-- 侧边栏 - 数据上下文 -->
+                    <aside class="chat-sidebar" id="chatSidebar">
+                        <div class="sidebar-header">
+                            <h3>📊 数据上下文</h3>
+                            <button class="sidebar-toggle" id="toggleSidebar">◀</button>
+                        </div>
+                        <div class="sidebar-content" id="sidebarContent">
+                            <div class="no-data-hint">
+                                <p>暂无数据</p>
+                                <p class="hint">请先在「数据」页面上传文件</p>
+                            </div>
+                        </div>
+                    </aside>
+                    
+                    <!-- 主对话区 -->
+                    <div class="chat-main">
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="welcome-message">
+                                <div class="welcome-icon">🤖</div>
+                                <h2>欢迎使用 Chat2Excel</h2>
+                                <p>我是您的数据分析助手，可以帮您：</p>
+                                <ul class="capabilities-list">
+                                    <li>📊 理解数据结构和字段含义</li>
+                                    <li>🔍 查询和筛选数据</li>
+                                    <li>📈 生成统计分析和洞察</li>
+                                    <li>💡 回答关于数据的任何问题</li>
+                                </ul>
+                                <div class="welcome-hint" id="welcomeHint">
+                                    <p>👈 请先在「数据」页面上传 CSV 文件</p>
+                                </div>
+                                <div class="suggested-questions" id="suggestedQuestions" style="display: none;"></div>
+                            </div>
+                        </div>
+                        <div class="chat-input-wrapper">
+                            <div class="chat-input-container">
+                                <textarea 
+                                    id="chatInput" 
+                                    placeholder="输入您的问题，按 Enter 发送..."
+                                    rows="1"
+                                ></textarea>
+                                <button id="sendBtn" class="send-btn" title="发送 (Enter)">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M22 2L11 13M22 2L15 22L11 13L2 9L22 2Z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="input-hint">
+                                <span>Shift + Enter 换行</span>
+                                <span id="modelIndicator">模型: qwen3-max</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 报告页面 -->
+            <div class="tab-content" id="tab-report">
+                <div class="report-container">
+                    <!-- 报告生成区 -->
+                    <div class="report-generator">
+                        <div class="generator-header">
+                            <h2>📄 生成分析报告</h2>
+                            <p class="subtitle">描述您的分析需求，AI 将自动生成结构化的数据分析报告</p>
+                        </div>
+                        <div class="generator-input">
+                            <textarea 
+                                id="reportRequest" 
+                                placeholder="例如：分析 Steam 游戏的整体情况，包括价格分布、开发商分析、游戏类型趋势等..."
+                                rows="3"
+                            ></textarea>
+                            <button id="generateReportBtn" class="btn btn-primary">
+                                <span class="btn-icon">✨</span>
+                                生成报告
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 报告生成进度 -->
+                    <div class="report-progress" id="reportProgress" style="display: none;">
+                        <div class="progress-header">
+                            <h3>⏳ 正在生成报告...</h3>
+                            <span class="progress-status" id="progressStatus">准备中</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="reportProgressBar" style="width: 0%"></div>
+                        </div>
+                        <div class="progress-log" id="progressLog"></div>
+                    </div>
+                    
+                    <!-- 报告预览 -->
+                    <div class="report-preview" id="reportPreview" style="display: none;">
+                        <div class="report-header">
+                            <div class="report-title-area">
+                                <h2 id="reportTitle">报告标题</h2>
+                                <p class="report-summary" id="reportSummary">报告摘要</p>
+                            </div>
+                            <div class="report-actions">
+                                <button class="btn btn-secondary" id="exportReportBtn">
+                                    📥 导出
+                                </button>
+                                <button class="btn btn-secondary" id="closeReportBtn">
+                                    ✕ 关闭
+                                </button>
+                            </div>
+                        </div>
+                        <div class="report-content" id="reportContent">
+                            <!-- 报告章节将动态生成 -->
+                        </div>
+                    </div>
+                    
+                    <!-- 历史报告 -->
+                    <div class="report-history" id="reportHistory">
+                        <h3>📚 历史报告</h3>
+                        <div class="report-list" id="reportList">
+                            <p class="no-reports">暂无历史报告</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 配置页面 -->
+            <div class="tab-content" id="tab-config">
+                <div class="config-container">
+                    <h2>🔧 LLM 配置</h2>
+                    
+                    <!-- API 配置 -->
+                    <section class="config-section">
+                        <h3>API 设置</h3>
+                        <div class="form-group">
+                            <label for="apiKey">API Key</label>
+                            <div class="input-group">
+                                <input type="password" id="apiKey" placeholder="sk-xxxxxxxxxxxxxxxx">
+                                <button class="toggle-btn" id="toggleApiKey">👁</button>
+                            </div>
+                            <p class="help-text">阿里云百炼 API Key</p>
+                        </div>
+                        <div class="form-group">
+                            <label for="baseUrl">Base URL</label>
+                            <input type="text" id="baseUrl" value="https://dashscope.aliyuncs.com/compatible-mode/v1">
+                        </div>
+                        <div class="form-actions">
+                            <button id="testConnection" class="btn btn-secondary">🔌 测试连接</button>
+                            <div id="testResult" class="test-result"></div>
+                        </div>
+                    </section>
+
+                    <!-- 默认配置 -->
+                    <section class="config-section">
+                        <h3>默认模型配置</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="defaultModel">模型</label>
+                                <input type="text" id="defaultModel" value="qwen3-max" placeholder="输入模型名称，如 qwen3-max">
+                                <p class="help-text">常用: qwen3-max, qwen-plus, qwen-turbo</p>
+                            </div>
+                            <div class="form-group">
+                                <label for="enableThinking">
+                                    <input type="checkbox" id="enableThinking" checked>
+                                    开启思考模式
+                                </label>
+                                <p class="help-text">qwen3 系列支持深度思考</p>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="maxTokens">Max Tokens</label>
+                                <input type="number" id="maxTokens" value="8192" min="1024" max="32768">
+                            </div>
+                            <div class="form-group">
+                                <label for="temperature">Temperature</label>
+                                <input type="range" id="temperature" min="0" max="1" step="0.1" value="0.7">
+                                <span id="temperatureValue">0.7</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Agent 配置 -->
+                    <section class="config-section">
+                        <h3>Agent 配置</h3>
+                        <p class="section-desc">每个 Agent 可以单独配置参数，未设置的参数将使用默认值</p>
+                        
+                        <div class="agent-configs" id="agentConfigs">
+                            <!-- 动态生成 -->
+                        </div>
+                    </section>
+
+                    <!-- 保存按钮 -->
+                    <div class="config-footer">
+                        <button id="resetConfig" class="btn btn-secondary">🔄 重置默认</button>
+                        <button id="saveConfig" class="btn btn-primary">💾 保存配置</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

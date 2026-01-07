@@ -1,0 +1,65 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# Logs
+logs/
+*.log
+
+# User Data (runtime generated)
+data/sessions/
+data/uploads/
+data/reports/
+backend/data/
+
+# Config with sensitive data (use config.example.json as template)
+data/config.json
+
+# OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Test files (if any remain)
+test_*.py
+test-*.html
+
+# Temporary files
+*.tmp
+*.temp
+*.bak

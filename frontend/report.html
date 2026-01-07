@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分析报告 - Chat2Excel</title>
+    <link rel="stylesheet" href="report-styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- ECharts 专业图表库 -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <!-- PDF 导出库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <div class="report-page">
+        <!-- 侧边目录 -->
+        <aside class="report-sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>📑 目录</h2>
+                <button class="sidebar-toggle" onclick="toggleSidebar()">◀</button>
+            </div>
+            <nav class="toc" id="toc">
+                <!-- 动态生成目录 -->
+            </nav>
+        </aside>
+        
+        <!-- 主内容区 -->
+        <main class="report-main">
+            <!-- 顶部工具栏 -->
+            <header class="report-header">
+                <div class="header-left">
+                    <button class="btn-back" onclick="window.close()">← 返回</button>
+                </div>
+                <div class="header-right">
+                    <button class="btn-download" onclick="downloadPDF()">
+                        📥 下载 PDF
+                    </button>
+                </div>
+            </header>
+            
+            <!-- 报告内容 -->
+            <article class="report-content" id="reportContent">
+                <div class="loading-state">
+                    <div class="loading-spinner"></div>
+                    <p>加载报告中...</p>
+                </div>
+            </article>
+        </main>
+    </div>
+    
+    <script src="report.js"></script>
+</body>
+</html>
+

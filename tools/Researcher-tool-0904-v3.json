@@ -1,0 +1,145 @@
+[
+    
+    {
+        "type": "function",
+        "function": {
+            "name": "Search",
+            "description": "根据用户需求检索单张数据分析报表并定义查询参数。⚠️⚠️⚠️ **参数来源铁律**：所有参数只能来自用户输入或之前Search工具表的返回结果，❌禁止编造参数。如果缺少必要参数（如sku_name），必须先Search工具表获取，不能直接编造或猜测",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "scenario_description": {
+                        "type": "string",
+                        "description": "具体分析场景的业务描述（如：'分析2025年6月华东地区生鲜品类销售表现'）"
+                    },
+                    "table": {
+                        "type": "object",
+                        "description": "需要查询的单个数据报表",
+                        "properties": {
+                            "table_name": {
+                                "type": "string",
+                                "description": "系统内注册的报表名称（如：'归因表-经营结果'）"
+                            },
+                            "target_fields": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "description": "需要提取的字段列表。❌❌❌ **字段名必须与知识库表定义完全一致** ❌❌❌！必须使用知识库中该表定义的**实际字段名**，❌禁止编造或猜测字段名。同时包含维度字段和指标字段"
+                            },
+                            "filters": {
+                                "type": "object",
+                                "description": "该报表的查询筛选条件。测试模式下必须包含：时间对比/时间段、地区、聚合维度",
+                                "additionalProperties": {
+                                    "oneOf": [
+                                        {"type": "string"},
+                                        {"type": "number"},
+                                        {"type": "boolean"},
+                                        {"type": "array", "items": {"type": "string"}}
+                                    ]
+                                }
+                            },
+                            "selection_reason": {
+                                "type": "string",
+                                "description": "选择此报表的具体原因（如：'唯一包含城市维度销售数据的报表'）"
+                            }
+                        },
+                        "required": ["table_name", "filters"]
+                    }
+                },
+                "required": ["scenario_description", "table"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "Section",
+            "description": "生成报告章节。【重要】本工具只输出图表渲染需求（purpose + insight_summary），具体的图表配置由专门的图表Agent处理。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "章节名称（⚠️ 必须使用用户输入中的sections[i].title，不要自己编造章节名称）"
+                    },
+                    "description": {
+                        "type": "string", 
+                        "description": "章节结构描述。格式：【分析目标】一句话说明本章要回答什么问题 | 【分析路径】1.第一步→产出 2.第二步→产出 ... | 【完成标准】需要回答哪些问题才算完成"
+                    },
+                    "discoveries": {
+                        "type": "array",
+                        "description": "核心发现列表，每个发现必须包含洞察和图表需求",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "discovery_id": {
+                                    "type": "string",
+                                    "description": "发现编号，格式：discovery_1, discovery_2..."
+                                },
+                                "title": {
+                                    "type": "string",
+                                    "description": "发现标题（简短，含关键数值）。discovery_1应定位问题，discovery_2+用【主因】/【次因】等标记"
+                                },
+                                "insight": {
+                                    "type": "string",
+                                    "description": "洞察内容。必须包含：1) 导语（核心发现）；2) markdown表格（关键数据，表格前后必须空一行）；3) 承接语（引出图表）。使用{{CHART:chart_id}}占位符引用图表"
+                                },
+                                "chart_requirements": {
+                                    "type": "array",
+                                    "description": "图表渲染需求列表。只需描述目的和洞察摘要，❌禁止指定具体字段名/指标名，具体配置由图表Agent根据sampleData生成",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "chart_id": {
+                                                "type": "string",
+                                                "description": "图表唯一标识符，用于占位符引用，如'chart_1'"
+                                            },
+                                            "purpose": {
+                                                "type": "string",
+                                                "description": "图表目的：想证明什么观点。如'对比各品类的销售表现，找出下滑最严重的品类'"
+                                            },
+                                            "insight_summary": {
+                                                "type": "string",
+                                                "description": "洞察摘要：这个图表要支撑的核心结论（含关键数值）。如'根茎类交易额下降30%，是所有品类中下滑最严重的'"
+                                            },
+                                            "data_ids": {
+                                                "type": "array",
+                                                "items": {"type": "string"},
+                                                "description": "使用的数据源ID列表（Search返回的dataId）"
+                                            }
+                                        },
+                                        "required": ["chart_id", "purpose", "insight_summary", "data_ids"]
+                                    }
+                                },
+                                "data_interpretation": {
+                                    "type": "string",
+                                    "description": "数据解读（2-3句，突出关键趋势/极值/拐点）"
+                                }
+                            },
+                            "required": ["discovery_id", "title", "insight", "chart_requirements", "data_interpretation"]
+                        },
+                        "minItems": 1
+                    },
+                    "conclusion": {
+                        "type": "string",
+                        "description": "结论与建议。包含：1) 核心结论（含数值）；2) 基于归因的行动建议；3) 可选：预测建议效果（需注明'基于现有数据预测，仅供参考'）。注意：建议和预测必须基于文中数据，禁止无中生有"
+                    },
+                    "data_references": {
+                        "type": "array",
+                        "description": "数据引用列表。⚠️⚠️⚠️ 必须填写！列出本section使用的所有search结果的dataId、描述和用途",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "data_id": {"type": "string", "description": "Search工具返回的dataId（UUID格式）"},
+                                "description": {"type": "string", "description": "该数据源的描述"},
+                                "usage": {"type": "string", "description": "该数据在本section中的用途"}
+                            },
+                            "required": ["data_id", "description", "usage"]
+                        },
+                        "minItems": 1
+                    }
+                },
+                "required": ["name", "description", "discoveries", "conclusion", "data_references"]
+            }
+        }
+    }
+]

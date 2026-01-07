@@ -1,0 +1,97 @@
+[
+    {
+        "type": "function",
+        "function": {
+            "name": "GenerateChartConfig",
+            "description": "根据图表需求和数据源信息，生成精确的图表配置。⚠️ xAxis/yAxis必须从sample_data中精确复制，禁止编造字段",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "chart_id": {
+                        "type": "string",
+                        "description": "图表唯一标识符，与需求中的chart_id一致"
+                    },
+                    "chart_type": {
+                        "type": "string",
+                        "enum": [
+                            "bar", "line", "scatter", "pie",
+                            "dual_axis_bar", "dual_axis_line", "dual_axis_mixed"
+                        ],
+                        "description": "图表类型。line-日期明细；bar-分类对比；dual_axis_mixed-2档量级差异；pie-占比分析。量级≥3档时拆成多张独立图表"
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "图表标题"
+                    },
+                    "data_sources": {
+                        "type": "array",
+                        "description": "数据源配置列表。每个dataSource的xAxis/yAxis必须从对应data_id的sample_data中精确复制",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "data_id": {
+                                    "type": "string",
+                                    "description": "数据源ID（UUID格式）"
+                                },
+                                "data_label": {
+                                     "type": "string",
+                                     "description": "数据源标签。简洁明了，表明数据内容（如'当期交易额'/'上周销量'）。禁止：1)过长描述；2)模糊词如'业绩表现'；3)日期详情放标题不放label"
+                                 },
+"x_axis": {
+                                     "type": "string",
+                                     "description": "X轴字段名。⚠️⚠️⚠️【铁律】禁止使用数值字段：交易额/销量/GMV/金额/件数/订单数/占比等数值字段绝对禁止用于xAxis。只能用：日期/品类名/SPU名/城市/渠道等文本分类字段。必须从sample_data的key中精确复制"
+                                 },
+"y_axis": {
+                                     "type": "array",
+                                     "items": {"type": "string"},
+                                     "description": "Y轴字段名列表。必须从sample_data的key中选择，禁止使用sample_data的value。常见错误：把dateType的值（如'对比增长率(%)'）当作字段名"
+                                 },
+                                "axis": {
+                                    "type": "string",
+                                    "enum": ["primary", "secondary", ""],
+                                    "description": "Y轴位置（双轴图时必填）。大量级/数值型→primary，小量级/百分比型→secondary"
+                                },
+                                "render_type": {
+                                    "type": "string",
+                                    "enum": ["bar", "line", ""],
+                                    "description": "渲染方式（仅dual_axis_mixed时填写）"
+                                },
+                                "axis_title": {
+                                    "type": "string",
+                                    "description": "Y轴标题（可选）"
+                                },
+                                "filter": {
+                                    "type": "object",
+                                    "description": "数据过滤配置。⚠️校验规则：1)field必须是sample_data的key；2)该字段在sample_data中的值不能为空；3)值为空则不设置filter，留空{}",
+                                    "properties": {
+                                        "field": {
+                                            "type": "string",
+                                            "description": "过滤字段名。必须从sample_data的key中选，且该字段值不为空"
+                                        },
+                                        "values": {
+                                            "type": "array",
+                                            "items": {"type": "string"},
+                                            "description": "过滤值列表"
+                                        },
+                                        "top": {
+                                            "type": ["integer", "null"],
+                                            "description": "取前N条（可选）"
+                                        },
+                                        "order": {
+                                            "type": "string",
+                                            "enum": ["desc", "asc", ""],
+                                            "description": "排序方式（可选）"
+                                        }
+                                    }
+                                }
+                            },
+                            "required": ["data_id", "data_label", "x_axis", "y_axis"]
+                        }
+                    }
+                },
+                "required": ["chart_id", "chart_type", "title", "data_sources"]
+            }
+        }
+    }
+]
+

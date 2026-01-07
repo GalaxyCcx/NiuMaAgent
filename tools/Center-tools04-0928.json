@@ -1,0 +1,157 @@
+[
+  
+  {
+    "type": "function",
+    "function": {
+      "name": "Clarification",
+      "description": "将用户问题进行澄清，进行更结构化的表达，并要求用户进行细节确认",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "requirement": {
+            "type": "string",
+            "description": "用户的问题"
+          }
+        },
+        "required": ["requirement"]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "GetKnowledge",
+      "description": "基于已澄清的问题，获取对应的知识库信息",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "topic": {
+            "type": "string",
+            "description": "基于问题所涉及的主题"
+          },
+          "focus": {
+            "type": "string",
+            "description": "基于问题所涉及的重点"
+          },
+          "requirement": {
+            "type": "string",
+            "description": "基于问题所涉及的要求"
+          },
+          "description": {
+            "type": "string",
+            "description": "基于问题所涉及的具体描述"
+          }
+        },
+        "required": ["topic", "focus", "requirement", "description"]        
+      }
+    }
+  },
+  {
+  "type": "function",
+  "function": {
+    "name": "CheckPermission",
+    "description": "验证用户是否具备指定品类组和地区的访问权限",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "purchaseManagementGroupName": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "需要验证权限的品类组名称数组，例如：['蔬菜组', '水果组']"
+        },
+        "bArea": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "需要验证权限的地区名称数组，例如：['华东地区','华南地区']"
+        }
+      },
+      "required": [
+        "purchaseManagementGroupName",
+        "bArea"
+      ]
+    }
+  }
+},
+  {
+  "type": "function",
+  "function": {
+    "name": "Sections",
+    "description": "生成包含动态参数配置和详细章节结构的完整报告框架",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "topic": {
+          "type": "string",
+          "description": "报告的核心主题/标题"
+        },
+        "parameters": {
+          "type": "object",
+          "description": "完全自定义的关键分析维度参数，模型自行决定参数名称和值",
+          "additionalProperties": {
+            "oneOf": [
+              {"type": "string"},
+              {"type": "array", "items": {"type": "string"}},
+              {"type": "object", "additionalProperties": true}
+            ]
+          }
+        },
+        "sections": {
+          "type": "array",
+          "description": "结构化报告章节设计",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "description": "章节报告的这一章节的标题/名称标题"
+              },
+              "research_description": {
+                "type": "string",
+                "description": "详细说明应在这一部分研究和涵盖的内容（5-7句话）"
+              },
+              "analysis_method": {
+                "type": "string",
+                "description": "具体应使用哪些分析或比较方法（例如：'比较分析'、'技术深度剖析'、'案例研究分析'、'优缺点评估'）"
+              },
+              "key_parameters": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "本本部分必须涵盖的关键参数、指标或具体的关键信息的列表"
+              },
+              "research_focus": {
+                "type": "string",
+                "description": "本部分研究的重点（例如：'市场趋势'、'技术发展'、'竞争对手分析'、'用户需求'）"
+              }
+            },
+            "required": ["title", "research_description", "analysis_method", "key_parameters", "research_focus"]
+          }
+        }
+      },
+      "required": ["topic", "parameters", "sections"]
+    }
+  }
+},
+  {
+    "type": "function",
+    "function": {
+      "name": "Guide",
+      "description": "基于已生成的报告，向用户提出引导性的问题，以引导他们进行深度研究",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "guide": {
+            "type": "string",
+            "description": "一个基于已生成的报告的引导性问题，以引导用户进行深度研究"
+          }
+        },
+        "required": ["guide"]
+      }
+    }
+  }
+
+]
+ 

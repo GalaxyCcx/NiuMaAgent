@@ -1,0 +1,1280 @@
+/* ============================================
+   Chat2Excel 报告页面样式
+   ============================================ */
+
+:root {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #334155;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --border: #334155;
+    --primary: #6366f1;
+    --primary-hover: #4f46e5;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --error: #ef4444;
+    --info: #3b82f6;
+    
+    --sidebar-width: 280px;
+    --header-height: 64px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.7;
+}
+
+/* ============ 页面布局 ============ */
+.report-page {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* ============ 侧边栏 ============ */
+.report-sidebar {
+    width: var(--sidebar-width);
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    overflow-y: auto;
+    transition: transform 0.3s ease;
+    z-index: 100;
+}
+
+.report-sidebar.collapsed {
+    transform: translateX(-100%);
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--bg-secondary);
+}
+
+.sidebar-header h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.sidebar-toggle {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    width: 32px;
+    height: 32px;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sidebar-toggle:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+/* 目录 */
+.toc {
+    padding: 1rem;
+}
+
+.toc-item {
+    display: block;
+    padding: 0.75rem 1rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-radius: 0.5rem;
+    margin-bottom: 0.25rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.toc-item:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.toc-item.active {
+    background: rgba(99, 102, 241, 0.2);
+    color: var(--primary);
+    font-weight: 500;
+}
+
+.toc-item .toc-number {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    text-align: center;
+    background: var(--bg-tertiary);
+    border-radius: 50%;
+    font-size: 0.75rem;
+    margin-right: 0.5rem;
+}
+
+.toc-item.active .toc-number {
+    background: var(--primary);
+    color: white;
+}
+
+/* ============ 主内容区 ============ */
+.report-main {
+    flex: 1;
+    margin-left: var(--sidebar-width);
+    transition: margin-left 0.3s ease;
+}
+
+.report-sidebar.collapsed + .report-main {
+    margin-left: 0;
+}
+
+/* 顶部工具栏 */
+.report-header {
+    height: var(--header-height);
+    background: rgba(30, 41, 59, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.btn-back {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-back:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.btn-download {
+    background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+    color: white;
+    border: none;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-download:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+/* 报告内容 - 扩大宽度，充分利用屏幕空间 */
+.report-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2.5rem 3rem;
+}
+
+@media (min-width: 1600px) {
+    .report-content {
+        max-width: 1400px;
+    }
+}
+
+/* 加载状态 */
+.loading-state {
+    text-align: center;
+    padding: 4rem;
+    color: var(--text-muted);
+}
+
+.loading-spinner {
+    width: 48px;
+    height: 48px;
+    border: 3px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    margin: 0 auto 1rem;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ============ 报告标题区 ============ */
+.report-title-section {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding: 3rem 2rem;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
+    border-radius: 1.5rem;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.report-title-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), var(--success), var(--warning));
+}
+
+.report-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary) 50%, #a855f7 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1rem;
+    letter-spacing: -0.02em;
+}
+
+.report-meta {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.report-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.report-summary {
+    margin-top: 1.5rem;
+    padding: 1.25rem 1.5rem;
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 0.75rem;
+    text-align: left;
+    color: var(--text-secondary);
+    line-height: 1.8;
+    font-size: 0.95rem;
+}
+
+/* ============ 章节样式 ============ */
+.report-section {
+    margin-bottom: 2.5rem;
+    padding: 2rem 2.5rem;
+    background: var(--bg-secondary);
+    border-radius: 1rem;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    transition: box-shadow 0.3s ease;
+}
+
+.report-section:hover {
+    box-shadow: 0 6px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* 引言和总结章节特殊样式 */
+.report-section:first-child,
+.report-section:last-child {
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(99, 102, 241, 0.05) 100%);
+    border-color: rgba(99, 102, 241, 0.3);
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.section-number {
+    width: 42px;
+    height: 42px;
+    line-height: 42px;
+    text-align: center;
+    background: linear-gradient(135deg, var(--primary), #a855f7);
+    color: white;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.section-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    flex: 1;
+}
+
+.section-goal {
+    background: rgba(59, 130, 246, 0.08);
+    border-left: 3px solid var(--info);
+    padding: 1rem 1.25rem;
+    border-radius: 0 0.5rem 0.5rem 0;
+    margin-bottom: 1.5rem;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+/* ============ 发现内容 ============ */
+.discovery {
+    margin-bottom: 1.5rem;
+    padding: 1.75rem 2rem;
+    background: linear-gradient(135deg, var(--bg-tertiary) 0%, rgba(51, 65, 85, 0.7) 100%);
+    border-radius: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.discovery:last-child {
+    margin-bottom: 0;
+}
+
+.discovery-title {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.discovery-title::before {
+    content: '💡';
+}
+
+.discovery-content {
+    color: var(--text-secondary);
+    line-height: 1.8;
+}
+
+.discovery-content p {
+    margin-bottom: 0.75rem;
+}
+
+.discovery-content ul, 
+.discovery-content ol {
+    margin: 0.75rem 0;
+    padding-left: 1.5rem;
+}
+
+.discovery-content li {
+    margin-bottom: 0.5rem;
+}
+
+.discovery-content strong {
+    color: var(--text-primary);
+}
+
+.discovery-content code {
+    background: var(--bg-primary);
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    font-size: 0.875em;
+    color: var(--primary);
+}
+
+/* ============ 图表容器 ============ */
+.chart-container {
+    margin: 1.5rem 0;
+    padding: 1.5rem 2rem;
+    background: linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, var(--bg-secondary) 100%);
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.chart-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1.25rem;
+    text-align: center;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.chart-wrapper {
+    width: 100%;
+    min-height: 280px;
+}
+
+.chart-wrapper-inner {
+    width: 100%;
+}
+
+.chart-no-data {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* ============ SVG 图表通用样式 ============ */
+.chart-svg {
+    width: 100%;
+    height: 280px;
+    display: block;
+}
+
+.chart-svg text {
+    font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+}
+
+.chart-svg .chart-bar {
+    transition: opacity 0.2s ease;
+    cursor: pointer;
+}
+
+.chart-svg .chart-bar:hover {
+    opacity: 0.85;
+}
+
+.chart-svg .bar-value-label {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+}
+
+.chart-svg .chart-bar:hover + .bar-value-label,
+.chart-svg:hover .bar-value-label {
+    opacity: 0;
+}
+
+.chart-svg .data-point {
+    transition: r 0.2s ease;
+    cursor: pointer;
+}
+
+.chart-svg .data-point:hover {
+    r: 7;
+}
+
+.chart-svg .pie-segment {
+    transition: opacity 0.2s ease;
+    cursor: pointer;
+}
+
+.chart-svg .pie-segment:hover {
+    opacity: 0.85;
+}
+
+/* ============ 纯 CSS 图表（全新实现） ============ */
+
+/* 图表主体 */
+.css-chart {
+    position: relative;
+    width: 100%;
+    padding: 1rem 0;
+}
+
+/* 图表图例 */
+.chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem 1.5rem;
+    margin-bottom: 1rem;
+    padding: 0.5rem 1rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+/* 旧的 CSS 图表样式已移除，使用 SVG 实现 */
+
+/* ============ 饼图（SVG 实现） ============ */
+.css-pie-chart {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2.5rem;
+    flex-wrap: wrap;
+    padding: 1.5rem;
+}
+
+.css-pie-chart .pie-svg {
+    width: 200px;
+    height: 200px;
+    flex-shrink: 0;
+}
+
+.css-pie-chart .pie-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    min-width: 150px;
+}
+
+.css-pie-chart .pie-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.85rem;
+}
+
+.css-pie-chart .pie-legend-item .legend-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+.css-pie-chart .pie-legend-item .legend-name {
+    flex: 1;
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.css-pie-chart .pie-legend-item .legend-value {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.85rem;
+    min-width: 50px;
+    text-align: right;
+}
+
+/* 双轴图样式已整合到 SVG 通用样式 */
+
+/* ============ 柱状图 ============ */
+.bar-chart {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    height: 280px;
+    padding: 0 1rem;
+    border-left: 2px solid var(--border);
+    border-bottom: 2px solid var(--border);
+    margin-left: 50px;
+    position: relative;
+}
+
+.bar-chart-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    max-width: 80px;
+}
+
+.bar-group-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 240px;
+}
+
+.bar-item {
+    width: 28px;
+    min-height: 4px;
+    border-radius: 4px 4px 0 0;
+    transition: all 0.3s ease;
+    position: relative;
+    cursor: pointer;
+}
+
+.bar-item:hover {
+    filter: brightness(1.15);
+    transform: scaleY(1.02);
+}
+
+.bar-item::after {
+    content: attr(data-value);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 4px 8px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: var(--text-primary);
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+}
+
+.bar-item:hover::after {
+    opacity: 1;
+}
+
+.bar-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-align: center;
+    max-width: 70px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transform: rotate(-30deg);
+    transform-origin: top center;
+}
+
+/* Y 轴刻度 */
+.bar-y-axis {
+    position: absolute;
+    left: -50px;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 0 0.5rem;
+}
+
+.y-axis-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-align: right;
+    width: 40px;
+}
+
+/* 柱状图配色 */
+.bar-color-1 { background: linear-gradient(180deg, #6366f1, #4f46e5); }
+.bar-color-2 { background: linear-gradient(180deg, #10b981, #059669); }
+.bar-color-3 { background: linear-gradient(180deg, #f59e0b, #d97706); }
+.bar-color-4 { background: linear-gradient(180deg, #ef4444, #dc2626); }
+.bar-color-5 { background: linear-gradient(180deg, #8b5cf6, #7c3aed); }
+.bar-color-6 { background: linear-gradient(180deg, #06b6d4, #0891b2); }
+
+/* ============ 折线图 ============ */
+.line-chart {
+    position: relative;
+    height: 280px;
+    margin-left: 50px;
+    border-left: 2px solid var(--border);
+    border-bottom: 2px solid var(--border);
+}
+
+.line-chart-svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.line-path {
+    fill: none;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.line-area {
+    opacity: 0.15;
+}
+
+.line-dot {
+    cursor: pointer;
+    transition: r 0.2s ease;
+}
+
+.line-dot:hover {
+    r: 6;
+}
+
+.line-labels {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0.5rem 0;
+}
+
+.line-label {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    transform: rotate(-30deg);
+    transform-origin: top left;
+}
+
+/* 折线图配色 */
+.line-color-1 { stroke: #6366f1; fill: #6366f1; }
+.line-color-2 { stroke: #10b981; fill: #10b981; }
+.line-color-3 { stroke: #f59e0b; fill: #f59e0b; }
+.line-color-4 { stroke: #ef4444; fill: #ef4444; }
+.line-color-5 { stroke: #8b5cf6; fill: #8b5cf6; }
+
+/* ============ 饼图 ============ */
+.pie-chart {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3rem;
+    padding: 1rem;
+}
+
+.pie-circle {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    position: relative;
+}
+
+.pie-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100px;
+    height: 100px;
+    background: var(--bg-secondary);
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.pie-total-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.pie-total-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.pie-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.pie-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+}
+
+.pie-legend-color {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+.pie-legend-label {
+    color: var(--text-secondary);
+    flex: 1;
+}
+
+.pie-legend-value {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.pie-legend-percent {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    min-width: 45px;
+    text-align: right;
+}
+
+/* 饼图配色 */
+.pie-color-1 { background: #6366f1; }
+.pie-color-2 { background: #10b981; }
+.pie-color-3 { background: #f59e0b; }
+.pie-color-4 { background: #ef4444; }
+.pie-color-5 { background: #8b5cf6; }
+.pie-color-6 { background: #06b6d4; }
+.pie-color-7 { background: #ec4899; }
+.pie-color-8 { background: #84cc16; }
+
+/* ============ 双轴混合图 ============ */
+.dual-axis-chart {
+    position: relative;
+    height: 280px;
+    margin: 0 50px;
+    border-bottom: 2px solid var(--border);
+}
+
+.dual-axis-bars {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    padding: 0 1rem;
+}
+
+.dual-axis-svg {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: visible;
+}
+
+.dual-axis-svg .line-dot {
+    pointer-events: auto;
+}
+
+.dual-y-left {
+    position: absolute;
+    left: -50px;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.dual-y-right {
+    position: absolute;
+    right: -50px;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.dual-y-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.dual-y-left .dual-y-label {
+    text-align: right;
+    padding-right: 0.5rem;
+}
+
+.dual-y-right .dual-y-label {
+    text-align: left;
+    padding-left: 0.5rem;
+}
+
+.dual-axis-labels {
+    display: flex;
+    justify-content: space-around;
+    padding-top: 0.75rem;
+}
+
+.dual-axis-label {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    text-align: center;
+    max-width: 60px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ============ 图表 Tooltip ============ */
+.chart-tooltip {
+    position: fixed;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    color: var(--text-primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.chart-tooltip.visible {
+    opacity: 1;
+}
+
+.tooltip-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.tooltip-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tooltip-color {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+}
+
+.tooltip-value {
+    font-weight: 500;
+}
+
+/* ============ 数据表格 ============ */
+.data-table-container {
+    margin: 1rem 0;
+    overflow-x: auto;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.data-table th,
+.data-table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+.data-table th {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+}
+
+.data-table tr:hover td {
+    background: rgba(99, 102, 241, 0.05);
+}
+
+.data-table td {
+    color: var(--text-secondary);
+}
+
+/* ============ Markdown 内容 ============ */
+.markdown-content {
+    font-size: 0.95rem;
+    line-height: 1.8;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4 {
+    color: var(--text-primary);
+    margin: 1.5rem 0 0.75rem;
+    font-weight: 600;
+}
+
+.markdown-content h1:first-child,
+.markdown-content h2:first-child,
+.markdown-content h3:first-child {
+    margin-top: 0;
+}
+
+.markdown-content h1 { font-size: 1.4rem; }
+.markdown-content h2 { font-size: 1.2rem; }
+.markdown-content h3 { 
+    font-size: 1.1rem; 
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.markdown-content h4 { font-size: 1rem; }
+
+.markdown-content p {
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+}
+
+.markdown-content ul,
+.markdown-content ol {
+    margin: 0.75rem 0 1rem;
+    padding-left: 1.5rem;
+}
+
+.markdown-content li {
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.markdown-content li strong {
+    color: var(--text-primary);
+}
+
+.markdown-content blockquote {
+    border-left: 4px solid var(--primary);
+    padding: 0.75rem 1rem;
+    margin: 1rem 0;
+    background: rgba(99, 102, 241, 0.08);
+    border-radius: 0 0.5rem 0.5rem 0;
+    color: var(--text-secondary);
+}
+
+.markdown-content pre {
+    background: var(--bg-primary);
+    padding: 1rem 1.25rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+    border: 1px solid var(--border);
+}
+
+.markdown-content code {
+    background: rgba(99, 102, 241, 0.15);
+    padding: 0.15rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.9em;
+    color: var(--primary);
+}
+
+.markdown-content pre code {
+    background: transparent;
+    padding: 0;
+    color: var(--text-secondary);
+}
+
+.markdown-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.25rem 0;
+    font-size: 0.9rem;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.markdown-content table th,
+.markdown-content table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+.markdown-content table th {
+    background: linear-gradient(135deg, var(--bg-primary), rgba(99, 102, 241, 0.1));
+    color: var(--text-primary);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+}
+
+.markdown-content table td {
+    color: var(--text-secondary);
+}
+
+.markdown-content table tr:hover td {
+    background: rgba(99, 102, 241, 0.05);
+}
+
+.markdown-content table tr:last-child td {
+    border-bottom: none;
+}
+
+.markdown-content strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.markdown-content em {
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.markdown-content hr {
+    border: none;
+    height: 1px;
+    background: var(--border);
+    margin: 1.5rem 0;
+}
+
+/* ============ 响应式 ============ */
+@media (max-width: 1024px) {
+    .report-sidebar {
+        transform: translateX(-100%);
+    }
+    
+    .report-sidebar.open {
+        transform: translateX(0);
+    }
+    
+    .report-main {
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .report-content {
+        padding: 1.5rem 1rem;
+    }
+    
+    .report-title {
+        font-size: 1.75rem;
+    }
+    
+    .report-section {
+        padding: 1.25rem;
+    }
+}
+
+/* ============ 打印样式 ============ */
+@media print {
+    /* 隐藏不需要打印的元素 */
+    .report-sidebar,
+    .report-header,
+    #pdf-loading {
+        display: none !important;
+    }
+    
+    /* 重置布局 */
+    .report-main {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+    
+    .report-content {
+        max-width: none !important;
+        padding: 15px !important;
+    }
+    
+    /* 基础样式 */
+    body {
+        background: white !important;
+        color: black !important;
+        font-size: 12pt !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    /* 章节样式 */
+    .report-section {
+        background: white !important;
+        border: 1px solid #ccc !important;
+        box-shadow: none !important;
+        break-inside: avoid;
+        page-break-inside: avoid;
+        margin-bottom: 15px !important;
+        padding: 15px !important;
+    }
+    
+    /* 发现区块 */
+    .discovery {
+        background: #f8f9fa !important;
+        border: 1px solid #dee2e6 !important;
+        box-shadow: none !important;
+        break-inside: avoid;
+        page-break-inside: avoid;
+        margin-bottom: 10px !important;
+    }
+    
+    /* 图表容器 */
+    .chart-container {
+        background: white !important;
+        border: 1px solid #dee2e6 !important;
+        break-inside: avoid;
+        page-break-inside: avoid;
+        margin: 10px 0 !important;
+    }
+    
+    .chart-wrapper {
+        background: white !important;
+        min-height: auto !important;
+    }
+    
+    .chart-wrapper img {
+        max-width: 100% !important;
+        height: auto !important;
+    }
+    
+    /* 文字颜色 */
+    h1, h2, h3, h4, .section-title, .discovery-title, .chart-title {
+        color: #1e293b !important;
+    }
+    
+    p, li, td, th, span {
+        color: #334155 !important;
+    }
+    
+    /* 洞察和解读区块 */
+    .insight, .data-interpretation {
+        background: #f1f5f9 !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #334155 !important;
+    }
+    
+    /* 表格 */
+    table {
+        border-collapse: collapse !important;
+    }
+    
+    th, td {
+        border: 1px solid #dee2e6 !important;
+        padding: 8px !important;
+    }
+    
+    th {
+        background: #e9ecef !important;
+    }
+    
+    /* 链接 */
+    a {
+        color: #1e40af !important;
+        text-decoration: underline !important;
+    }
+    
+    /* 代码块 */
+    code, pre {
+        background: #f1f5f9 !important;
+        color: #1e293b !important;
+    }
+}
+
